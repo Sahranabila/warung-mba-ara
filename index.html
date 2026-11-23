@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warung Digital Mba Ara</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #fff0f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 650px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 3px 12px #ddd;
+}
+
+h1 {
+    text-align: center;
+    color: #d94f78;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 7px;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    background: #fff0f5;
+    border-radius: 10px;
+}
+
+.item input {
+    width: 60px;
+    text-align: center;
+}
+
+button {
+    padding: 12px;
+    background: #d94f78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #bd3d65;
+}
+
+.tombol {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.total {
+    background: #ffe4ec;
+    padding: 18px;
+    margin-top: 20px;
+    border-radius: 10px;
+}
+
+#hasil {
+    display: none;
+    background: #e7ffe7;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🌸 Warung Digital Mba Ara 🌸</h1>
+<p style="text-align:center">Silakan pilih menu favorit kamu!</p>
+
+<form id="formPesanan">
+
+<label>Nama Pelanggan</label>
+<input type="text" id="nama"
+placeholder="Masukkan nama lengkap kamu" required>
+
+<label>Nomor WhatsApp</label>
+<input type="tel" id="telepon"
+placeholder="Contoh: 088298504665"
+pattern="08[0-9]{8,11}"
+title="Masukkan nomor HP Indonesia yang diawali 08"
+required>
+
+<label>Alamat Pelanggan</label>
+<input type="text" id="alamat"
+placeholder="Masukkan alamat lengkap kamu" required>
+
+<label>Catatan Tambahan</label>
+<input type="text" id="catatan"
+placeholder="Contoh: Jangan terlalu pedas (opsional)">
+
+<label>Metode Pembayaran</label>
+<select id="pembayaran" required>
+    <option value="">-- Pilih Pembayaran --</option>
+    <option value="COD">COD (Bayar di tempat)</option>
+    <option value="Transfer Bank">Transfer Bank</option>
+</select>
+
+<h3>🍽️ Daftar Menu</h3>
+
+<div id="daftarMenu"></div>
+
+<div class="total">
+
+    <h3>🛒 Keranjang Belanja</h3>
+
+    <div id="keranjang">
+        Belum ada menu dipilih.
+    </div>
+
+    <hr>
+
+    <h3>Total Bayar:</h3>
+    <h2 id="total">Rp0</h2>
+
+</div>
+
+<button type="submit" class="tombol">
+    KONFIRMASI PESANAN
+</button>
+
+</form>
+
+<div id="hasil">
+
+    <h3>🎉 Pesanan Berhasil Disiapkan!</h3>
+
+    <div id="detail"></div>
+
+    <button type="button" class="tombol" id="kirimWA">
+        KIRIM PESANAN KE WHATSAPP
+    </button>
+
+</div>
+
+</div>
+
+<script>
+
+const nomorPenjual = "6288298504665";
+
+const keranjang = {};
+
+const menuWarung = [
+    {nama: "Nasi Goreng", harga: 15000},
+    {nama: "Mie Goreng", harga: 13000},
+    {nama: "Ayam Geprek", harga: 18000},
+    {nama: "Es Teh", harga: 5000},
+    {nama: "Jus Jeruk", harga: 8000}
+];
+
+const daftar = document.getElementById("daftarMenu");
+
+menuWarung.forEach((menu, index) => {
+
+    keranjang[index] = 0;
+
+    daftar.innerHTML += `
+        <div class="item">
+
+            <div>
+                <b>${menu.nama}</b><br>
+                Rp${menu.harga.toLocaleString("id-ID")}
+            </div>
+
+            <div>
+                <button type="button"
+                    onclick="ubahJumlah(${index}, -1)">-</button>
+
+                <input type="number"
+                    id="jumlah${index}"
+                    value="0"
+                    readonly>
+
+                <button type="button"
+                    onclick="ubahJumlah(${index}, 1)">+</button>
+            </div>
+
+        </div>
+    `;
+});
+
+function ubahJumlah(index, perubahan) {
+
+    keranjang[index] += perubahan;
+
+    if (keranjang[index] < 0) {
+        keranjang[index] = 0;
+    }
+
+    document.getElementById("jumlah" + index).value =
+        keranjang[index];
+
+    hitungTotal();
+}
+
+function hitungTotal() {
+
+    let total = 0;
+    let isiKeranjang = "";
+
+    menuWarung.forEach((menu, index) => {
+
+        let jumlah = keranjang[index];
+
+        if (jumlah > 0) {
+
+            let subtotal = jumlah * menu.harga;
+            total += subtotal;
+
+            isiKeranjang += `
+                <p>${menu.nama} x ${jumlah}
+                = Rp${subtotal.toLocaleString("id-ID")}</p>
+            `;
+        }
+    });
+
+    document.getElementById("keranjang").innerHTML =
+        isiKeranjang || "Belum ada menu dipilih.";
+
+    document.getElementById("total").textContent =
+        "Rp" + total.toLocaleString("id-ID");
+}
+
+let pesanWhatsApp = "";
+
+document.getElementById("formPesanan").addEventListener("submit", function(e) {
+
+    e.preventDefault();
+
+    if (Object.values(keranjang).every(jumlah => jumlah === 0)) {
+        alert("Silakan pilih menu terlebih dahulu!");
+        return;
+    }
+
+    let nama = document.getElementById("nama").value;
+    let whatsapp = document.getElementById("telepon").value;
+    let alamat = document.getElementById("alamat").value;
+    let catatan = document.getElementById("catatan").value;
+    let pembayaran = document.getElementById("pembayaran").value;
+
+    let total = 0;
+    let pesan = "";
+
+    pesan += "*PESANAN WARUNG DIGITAL MBA ARA* 🌸\n\n";
+    pesan += "*Data Pelanggan*\n";
+    pesan += "Nama: " + nama + "\n";
+    pesan += "WhatsApp: " + whatsapp + "\n";
+    pesan += "Alamat: " + alamat + "\n";
+    pesan += "Catatan: " + (catatan || "-") + "\n";
+    pesan += "Pembayaran: " + pembayaran + "\n\n";
+    pesan += "*Pesanan:*\n";
+
+    menuWarung.forEach((menu, index) => {
+
+        let jumlah = keranjang[index];
+
+        if (jumlah > 0) {
+
+            let subtotal = jumlah * menu.harga;
+            total += subtotal;
+
+            pesan += menu.nama + " x " + jumlah +
+            " = Rp" + subtotal.toLocaleString("id-ID") + "\n";
+        }
+    });
+
+    pesan += "\n*Total Bayar: Rp" +
+    total.toLocaleString("id-ID") + "*\n";
+
+    pesan += "\nMohon konfirmasi pesanan saya. Terima kasih!";
+
+    pesanWhatsApp = pesan;
+
+    document.getElementById("detail").innerHTML =
+        "<b>Nama:</b> " + nama +
+        "<br><b>Alamat:</b> " + alamat +
+        "<br><b>Pembayaran:</b> " + pembayaran +
+        "<br><b>Total:</b> Rp" + total.toLocaleString("id-ID");
+
+    document.getElementById("hasil").style.display = "block";
+
+    document.getElementById("hasil").scrollIntoView({
+        behavior: "smooth"
+    });
+
+});
+
+document.getElementById("kirimWA").addEventListener("click", function() {
+
+    if (!pesanWhatsApp) {
+        alert("Konfirmasi pesanan terlebih dahulu!");
+        return;
+    }
+
+    let url = "https://wa.me/" + nomorPenjual +
+    "?text=" + encodeURIComponent(pesanWhatsApp);
+
+    window.open(url, "_blank");
+
+});
+
+</script>
+</body>
+</html>
